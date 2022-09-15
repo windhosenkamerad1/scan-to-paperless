@@ -12,7 +12,7 @@ from typing import Dict, List, Optional, Set, Tuple, TypedDict, Union
 
 import cv2
 import pikepdf
-import zxingcpp
+# import zxingcpp
 from PIL import Image
 from PyPDF2 import PdfReader, PdfWriter
 from pyzbar import pyzbar
@@ -123,11 +123,13 @@ def _get_bar_codes_with_open_cv(
     if decoded_image is not None:
         try:
             detector = cv2.barcode.BarcodeDetector()
-            retval, decoded_info, decoded_type, points = detector.detectAndDecode(decoded_image)
+            retval, decoded_info, decoded_type, points = detector.detectAndDecode(
+                decoded_image)
             if retval:
                 if os.environ.get("PROGRESS", "FALSE") == "TRUE":
                     base_path = os.path.dirname(image)
-                    filename = ".".join(os.path.basename(image).split(".")[:-1])
+                    filename = ".".join(
+                        os.path.basename(image).split(".")[:-1])
                     suffix = random.randint(0, 1000)  # nosec
                     for bbox_index, bbox in enumerate(points):
                         dest_filename = os.path.join(
@@ -139,8 +141,8 @@ def _get_bar_codes_with_open_cv(
                         cv2.imwrite(
                             dest_filename,
                             decoded_image[
-                                int(math.floor(min(bbox_y))) : int(math.ceil(max(bbox_y))),
-                                int(math.floor(min(bbox_x))) : int(math.ceil(max(bbox_x))),
+                                int(math.floor(min(bbox_y))): int(math.ceil(max(bbox_y))),
+                                int(math.floor(min(bbox_x))): int(math.ceil(max(bbox_x))),
                             ],
                         )
                 founds: List[_FoundCode] = []
@@ -155,7 +157,8 @@ def _get_bar_codes_with_open_cv(
                         }
                     )
 
-                _add_code(alpha, width, height, page, all_codes, added_codes, codes, founds)
+                _add_code(alpha, width, height, page,
+                          all_codes, added_codes, codes, founds)
         except Exception:
             _LOG.warning("Open CV barcode decoder not available")
 
@@ -181,7 +184,8 @@ def _get_qr_codes_with_open_cv(
     decoded_image = cv2.imread(image, flags=cv2.IMREAD_COLOR)
     if decoded_image is not None:
         detector = cv2.QRCodeDetector()
-        retval, decoded_info, points, straight_qr_code = detector.detectAndDecodeMulti(decoded_image)
+        retval, decoded_info, points, straight_qr_code = detector.detectAndDecodeMulti(
+            decoded_image)
         if retval:
             if os.environ.get("PROGRESS", "FALSE") == "TRUE":
                 base_path = os.path.dirname(image)
@@ -203,8 +207,8 @@ def _get_qr_codes_with_open_cv(
                     cv2.imwrite(
                         dest_filename,
                         decoded_image[
-                            int(math.floor(min(bbox_y))) : int(math.ceil(max(bbox_y))),
-                            int(math.floor(min(bbox_x))) : int(math.ceil(max(bbox_x))),
+                            int(math.floor(min(bbox_y))): int(math.ceil(max(bbox_y))),
+                            int(math.floor(min(bbox_x))): int(math.ceil(max(bbox_x))),
                         ],
                     )
 
@@ -218,8 +222,8 @@ def _get_qr_codes_with_open_cv(
                         bbox_y = [p[1] for p in bbox]
                         retval, _ = detector.detectAndDecode(
                             decoded_image[
-                                int(math.floor(min(bbox_y))) : int(math.ceil(max(bbox_y))),
-                                int(math.floor(min(bbox_x))) : int(math.ceil(max(bbox_x))),
+                                int(math.floor(min(bbox_y))): int(math.ceil(max(bbox_y))),
+                                int(math.floor(min(bbox_x))): int(math.ceil(max(bbox_x))),
                             ]
                         )
                         for data in retval:
@@ -231,7 +235,8 @@ def _get_qr_codes_with_open_cv(
                                 }
                             )
                     except UnicodeDecodeError as exception:
-                        _LOG.warning("Open CV wechat QR code decoder error: %s", str(exception))
+                        _LOG.warning(
+                            "Open CV wechat QR code decoder error: %s", str(exception))
                 else:
                     founds.append(
                         {
@@ -240,7 +245,8 @@ def _get_qr_codes_with_open_cv(
                             "geometry": points[index],
                         }
                     )
-            _add_code(alpha, width, height, page, all_codes, added_codes, codes, founds)
+            _add_code(alpha, width, height, page,
+                      all_codes, added_codes, codes, founds)
 
     return codes
 
@@ -277,48 +283,53 @@ def _get_codes_with_open_cv_we_chat(
                         "geometry": None,
                     }
                 )
-            _add_code(alpha, width, height, page, all_codes, added_codes, codes, founds)
+            _add_code(alpha, width, height, page,
+                      all_codes, added_codes, codes, founds)
         except UnicodeDecodeError as exception:
-            _LOG.warning("Open CV wechat QR code decoder error: %s", str(exception))
+            _LOG.warning(
+                "Open CV wechat QR code decoder error: %s", str(exception))
 
     return codes
 
 
-def _get_codes_with_zxing(
-    image: str,
-    alpha: float,
-    page: int,
-    width: int,
-    height: int,
-    all_codes: Optional[List[_Code]] = None,
-    added_codes: Optional[Dict[str, _AllCodes]] = None,
-) -> List[_PageCode]:
-    if added_codes is None:
-        added_codes = {}
-    if all_codes is None:
-        all_codes = []
-    codes: List[_PageCode] = []
+# def _get_codes_with_zxing(
+#     image: str,
+#     alpha: float,
+#     page: int,
+#     width: int,
+#     height: int,
+#     all_codes: Optional[List[_Code]] = None,
+#     added_codes: Optional[Dict[str, _AllCodes]] = None,
+# ) -> List[_PageCode]:
+#     if added_codes is None:
+#         added_codes = {}
+#     if all_codes is None:
+#         all_codes = []
+#     codes: List[_PageCode] = []
 
-    decoded_image = cv2.imread(image, flags=cv2.IMREAD_COLOR)
-    if decoded_image is not None:
-        founds: List[_FoundCode] = []
-        for result in zxingcpp.read_barcodes(decoded_image):  # pylint: disable=c-extension-no-member
-            founds.append(
-                {
-                    "data": result.text,
-                    "type": "QR code" if result.format.name == "QRCode" else result.format.name,
-                    "geometry": [
-                        (result.position.top_left.x, result.position.top_left.y),
-                        (result.position.top_right.x, result.position.top_right.y),
-                        (result.position.bottom_right.x, result.position.bottom_right.y),
-                        (result.position.bottom_left.x, result.position.bottom_left.y),
-                    ],
-                }
-            )
+#     decoded_image = cv2.imread(image, flags=cv2.IMREAD_COLOR)
+#     if decoded_image is not None:
+#         founds: List[_FoundCode] = []
+#         for result in zxingcpp.read_barcodes(decoded_image):  # pylint: disable=c-extension-no-member
+#             founds.append(
+#                 {
+#                     "data": result.text,
+#                     "type": "QR code" if result.format.name == "QRCode" else result.format.name,
+#                     "geometry": [
+#                         (result.position.top_left.x, result.position.top_left.y),
+#                         (result.position.top_right.x, result.position.top_right.y),
+#                         (result.position.bottom_right.x,
+#                          result.position.bottom_right.y),
+#                         (result.position.bottom_left.x,
+#                          result.position.bottom_left.y),
+#                     ],
+#                 }
+#             )
 
-        _add_code(alpha, width, height, page, all_codes, added_codes, codes, founds)
+#         _add_code(alpha, width, height, page,
+#                   all_codes, added_codes, codes, founds)
 
-    return codes
+#     return codes
 
 
 def _get_codes_with_z_bar(
@@ -347,7 +358,8 @@ def _get_codes_with_z_bar(
                 "geometry": output.polygon,
             }
         )
-    _add_code(alpha, width, height, page, all_codes, added_codes, codes, founds)
+    _add_code(alpha, width, height, page,
+              all_codes, added_codes, codes, founds)
 
     return codes
 
@@ -392,9 +404,9 @@ def add_codes(
 
                 # Codes information to add the mask and number on the page
                 codes: List[_PageCode] = []
-                codes += _get_codes_with_zxing(
-                    image, 0, index, img0.width, img0.height, all_codes, added_codes
-                )
+                # codes += _get_codes_with_zxing(
+                #     image, 0, index, img0.width, img0.height, all_codes, added_codes
+                # )
                 codes += _get_bar_codes_with_open_cv(
                     image, 0, index, img0.width, img0.height, all_codes, added_codes
                 )
@@ -427,24 +439,29 @@ def add_codes(
                 if codes:
                     packet = io.BytesIO()
                     can = canvas.Canvas(
-                        packet, pagesize=(page.mediabox.width, page.mediabox.height), bottomup=False
+                        packet, pagesize=(page.mediabox.width,
+                                          page.mediabox.height), bottomup=False
                     )
                     for code in codes:
                         can.setFillColor(Color(1, 1, 1, alpha=0.7))
                         path = can.beginPath()
                         path.moveTo(
-                            code["geometry"][0][0] / dpi * pdf_dpi, code["geometry"][0][1] / dpi * pdf_dpi
+                            code["geometry"][0][0] / dpi *
+                            pdf_dpi, code["geometry"][0][1] / dpi * pdf_dpi
                         )
                         for point in code["geometry"][1:]:
-                            path.lineTo(point[0] / dpi * pdf_dpi, point[1] / dpi * pdf_dpi)
+                            path.lineTo(point[0] / dpi * pdf_dpi,
+                                        point[1] / dpi * pdf_dpi)
                         path.close()
                         can.drawPath(path, stroke=0, fill=1)
 
                         can.setFillColorRGB(0, 0, 0)
                         can.setFont(font_name, font_size)
                         can.drawString(
-                            min((p[0] for p in code["geometry"])) / dpi * pdf_dpi + margin_left,
-                            min((p[1] for p in code["geometry"])) / dpi * pdf_dpi
+                            min((p[0] for p in code["geometry"])) /
+                            dpi * pdf_dpi + margin_left,
+                            min((p[1] for p in code["geometry"])) /
+                            dpi * pdf_dpi
                             + font_size
                             + 0
                             + margin_top,
@@ -462,7 +479,8 @@ def add_codes(
                 output_pdf.add_page(page)
 
         if all_codes:
-            _LOG.info("%s codes found, create the additional page", len(all_codes))
+            _LOG.info("%s codes found, create the additional page",
+                      len(all_codes))
             with tempfile.NamedTemporaryFile(suffix=".pdf") as dest_1, tempfile.NamedTemporaryFile(
                 suffix=".pdf"
             ) as dest_2:
@@ -476,7 +494,8 @@ def add_codes(
                     if len(data) == 1:
                         data = data[0].split("\n")
                     data = [d if d else "|" for d in data]
-                    code_["data_formatted"] = "<br />".join(data)  # type: ignore
+                    # type: ignore
+                    code_["data_formatted"] = "<br />".join(data)
                 sections = [
                     f"<h2>{code_['type']} [{code_['pos']}]</h2>"
                     f"<p>{code_['data_formatted']}</p>"  # type: ignore
@@ -497,7 +516,8 @@ def add_codes(
                 </html>"""
                 )
 
-                css = CSS(string="@page { size: A4; margin: 1.5cm } p { font-size: 5pt; font-family: sans; }")
+                css = CSS(
+                    string="@page { size: A4; margin: 1.5cm } p { font-size: 5pt; font-family: sans; }")
 
                 html.write_pdf(dest_2.name, stylesheets=[css])
 
@@ -525,19 +545,22 @@ def add_codes(
                         pdf.save(output_filename)
         else:
             _LOG.info("No codes found, copy the input file")
-            subprocess.run(["cp", input_filename, output_filename], check=True)  # nosec
+            subprocess.run(
+                ["cp", input_filename, output_filename], check=True)  # nosec
 
 
 def main() -> None:
     """Add the QRCode and the BarCodes to a PDF in an additional page."""
-    arg_parser = argparse.ArgumentParser("Add the QRCode and the BarCodes to a PDF in an additional page")
+    arg_parser = argparse.ArgumentParser(
+        "Add the QRCode and the BarCodes to a PDF in an additional page")
     arg_parser.add_argument(
         "--dpi",
         help="The DPI used in the intermediate image to detect the QR code and the BarCode",
         type=int,
         default=300,
     )
-    arg_parser.add_argument("--pdf-dpi", help="The DPI used in the PDF", type=int, default=72)
+    arg_parser.add_argument(
+        "--pdf-dpi", help="The DPI used in the PDF", type=int, default=72)
     arg_parser.add_argument(
         "--font-size", help="The font size used in the PDF to add the number", type=int, default=10
     )
