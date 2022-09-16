@@ -60,12 +60,13 @@ def convert_clipboard() -> None:
         pyperclip.copy(new)
         print(new)
 
-import urllib.request
+import socket
 def upload_files():
 
     host = "192.168.178.3"
     retry_attempt = 0
-    while not urllib.request.urlopen(host):
+    IPaddress=socket.gethostbyname(socket.gethostname())
+    while not IPaddress==host:
         retry_attempt += 1
         sleep(60)
         if retry_attempt > 5:
