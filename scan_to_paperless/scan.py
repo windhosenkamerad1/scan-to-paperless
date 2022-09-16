@@ -233,7 +233,8 @@ def main() -> None:
                     args_["dpi"] = tiff.pages[0].tags["XResolution"].value[0]
 
     print(base_folder)
-    subprocess.call([config.get("viewer", VIEWER_DEFAULT), root_folder])  # nosec
+    if not config.get("viewer", VIEWER_DEFAULT) == "":
+        subprocess.call([config.get("viewer", VIEWER_DEFAULT), root_folder])  # nosec
 
     images = []
     for img in os.listdir(root_folder):
