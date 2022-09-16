@@ -60,17 +60,18 @@ def convert_clipboard() -> None:
         pyperclip.copy(new)
         print(new)
 
-import socket
+import requests
 import time
 def upload_files():
 
-    host = "192.168.178.3"
+    host = "http://192.168.178.3:80"
     retry_attempt = 0
-    IPaddress=socket.gethostbyname(socket.gethostname())
-    while not IPaddress==host:
+    
+    while requests.get(host).status_code is not "200":
         retry_attempt += 1
         time.sleep(60)
         if retry_attempt > 5:
+            print("NAS doesn't go online..")
             exit(1)
     os.system("rsync -av ~/Paperless/scan/ obelisk@192.168.178.3:/volume1/scanner/hermes/")
 
