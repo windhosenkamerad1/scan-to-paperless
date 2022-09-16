@@ -61,6 +61,7 @@ def convert_clipboard() -> None:
         print(new)
 
 import socket
+import time
 def upload_files():
 
     host = "192.168.178.3"
@@ -68,7 +69,7 @@ def upload_files():
     IPaddress=socket.gethostbyname(socket.gethostname())
     while not IPaddress==host:
         retry_attempt += 1
-        sleep(60)
+        time.sleep(60)
         if retry_attempt > 5:
             exit(1)
     os.system("rsync -av ~/Paperless/scan/ obelisk@192.168.178.3:/volume1/scanner/hermes/")
