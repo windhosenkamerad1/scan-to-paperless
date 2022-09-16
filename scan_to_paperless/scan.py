@@ -20,11 +20,15 @@ from scan_to_paperless import CONFIG_PATH, get_config
 
 from .config import VIEWER_DEFAULT
 
+from wakeonlan import send_magic_packet
+
 if sys.version_info.minor >= 8:
     from scan_to_paperless import config as schema
 else:
     from scan_to_paperless import config_old as schema  # type: ignore
 
+
+MAC_ADDR_NAS = "00:11:32:F8:38:76"
 
 def call(cmd: List[str], cmd2: Optional[List[str]] = None, **kwargs: Any) -> None:
     """Verbose implementation of check_call."""
@@ -55,6 +59,18 @@ def convert_clipboard() -> None:
     if new != original:
         pyperclip.copy(new)
         print(new)
+
+import urllib.request
+def upload_files():
+
+    host = "192.168.178.3"
+    retry_attempt = 0
+    while not urllib.request.urlopen(host):
+        retry_attempt += 1
+        sleep(60)
+        if retry_attempt > 5:
+            exit(1)
+    os.system("rsync -av ~/Paperless/scan/ obelisk@192.168.178.3:/volume1/scanner/hermes/")
 
 
 def main() -> None:
@@ -205,6 +221,8 @@ def main() -> None:
         print(exception)
         sys.exit(1)
 
+    send_magic_packet(MAC_ADDR_NAS)
+
     if config.get("extension", schema.EXTENSION_DEFAULT) != "png":
         for img in os.listdir(root_folder):
             if not img.startswith("image-"):
@@ -248,3 +266,5 @@ def main() -> None:
     else:
         os.rmdir(root_folder)
         os.rmdir(base_folder)
+
+    upload_files()
