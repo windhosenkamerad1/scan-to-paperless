@@ -67,12 +67,14 @@ def upload_files():
     host = "http://192.168.178.3:80"
     retry_attempt = 0
     
-    while requests.get(host).status_code is not "200":
-        retry_attempt += 1
-        time.sleep(60)
-        if retry_attempt > 5:
-            print("NAS doesn't go online..")
-            exit(1)
+    while retry_attempt <= 5:
+        try:
+            if requests.get(host).status_code is "200":
+                break
+        except requests.ConnectTimeout:
+            retry_attempt += 1
+            time.sleep(60)
+
     os.system("rsync -av ~/Paperless/scan/ obelisk@192.168.178.3:/volume1/scanner/hermes/")
 
 
