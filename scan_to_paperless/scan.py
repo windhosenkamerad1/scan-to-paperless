@@ -71,7 +71,7 @@ def upload_files():
         try:
             if requests.get(host).status_code is "200":
                 break
-        except requests.ConnectTimeout:
+        except Exception as exception:
             retry_attempt += 1
             time.sleep(60)
 
