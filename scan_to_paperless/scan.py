@@ -67,13 +67,8 @@ def upload_files():
     host = "http://192.168.178.3:80"
     retry_attempt = 0
     
-    while retry_attempt <= 5:
-        try:
-            if requests.get(host).status_code is "200":
-                break
-        except Exception as exception:
-            retry_attempt += 1
-            time.sleep(60)
+    if requests.get(host).status_code != "200":
+        time.sleep(300)
 
     os.system("rsync -av ~/Paperless/scan/ obelisk@192.168.178.3:/volume1/scanner/hermes/")
 
